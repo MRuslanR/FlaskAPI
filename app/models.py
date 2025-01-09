@@ -1,35 +1,13 @@
-import psycopg2
+from flask_login import UserMixin
 
-class Database:
-    def __init__(self, host, database, user, password):
-        self.host = host
-        self.database = database
-        self.user = user
-        self.password = password
-        self.connection = None
-        self.cursor = None
+from app import db, manager
 
-    def connect(self):
-        try:
-            self.connection = psycopg2.connect(
-                host=self.host,
-                database=self.database,
-                user=self.user,
-                password=self.password
-            )
-            self.cursor = self.connection.cursor()
-            print("Подключение к базе данных успешно установлено")
-        except Exception as e:
-            print(f"Ошибка подключения: {e}")
+class User (db.Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    login = db.Column(db.String(128), nullable=False, unique=True)
+    email = db.Column(db.String(128), nullable=False, unique=True)
+    password = db.Column(db.String(255), nullable=False)
 
-    def close(self):
-        if self.cursor:
-            self.cursor.close()
-        if self.connection:
-            self.connection.close()
-            print("Соединение с базой данных закрыто")
-
-
-
-
-
+@manager.user_loader
+def load_user(user_id):
+    return User.query.get(user_id)
